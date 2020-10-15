@@ -1,6 +1,15 @@
 # Solidity Counter Lab
 Welcome to CMU Blockchain's first Solidity lab! In this lab, we will be having a hands-on learning experience with Solidity, Remix, MetaMask, and smart contracts. Here, you will build a basic counter smart contract, add some ownership features for "security", and then deploy on an Ethereum Testnet!
 
+## Introduction
+You're about to make your first Ethereum smart contract! While it won't be *that* useful practically, it'll still be an amazing, censorship-resistant, fully decentralized, single integer that's your very own! Hopefully, it'll also help you get started and get you started on how Solidity works.
+
+We'll be walking through some initial code and then extend it with ownership protection and deploy to a Testnet. It would also be good to probably establish some baseline knowledge of what Solidity is, stolen from this beautiful [website](https://www.proofof.blog/2018/06/23/solidity.html).
+
+> Solidity is a contract-oriented programming language, which is most often used on the Ethereum blockchain. Ethereum is a blockchain that has a virtual machine where the state of the virtual machine is copied over thousands of computers. To run programs on the ethereum virtual machine, you pay for the cost of computation and storage with the ether token. It is a global shared computer that enables us to create programs that are virtually impossible to shut down or stop. It is the platform that brought us ICOs, or initial coin offerings, a tool used to fund development of new ideas. You also can build dapps, or decentralized applications, using Solidity. Dapps are like websites that interact with Ethereum smart contracts. Lets get started with Remix.
+
+Are we all good? Good.
+
 ## Table of Contents
 > 1. [Setup](#setup)
 > 2. [Starting Your Counter Smart Contract](#starting-your-counter-smart-contract)
@@ -9,169 +18,118 @@ Welcome to CMU Blockchain's first Solidity lab! In this lab, we will be having a
 > 5. [Deploying to Testnet](#deploying-to-testnet)
 
 ## Setup
-Install both Node.JS and Postman normally. Once that is done, create a folder on your computer called `node-lab`. We will be working on the lab inside this folder. Inside this directory, create a file called `index.js`. This will be your starter file and where you will develop your server code. Additionally, download the [data file][data-file] and place it in your lab folder as well.
-![Surprise tool meme](./assets/surprise.png "Surprise")
+For this lab, we'll be using [Remix](https://remix.ethereum.org/), an amazing fully-online IDE. It's a great place to get started leraning Solidity since no installation is necessary (no account needed either!).
 
-Once that's done, initialize your project and install Express by running this on your terminal:
-```
-$ npm init -y
-$ npm install express
-```
+Go ahead and open [Remix](https://remix.ethereum.org/) and get situated. If you've seen an IDE before, it should look pretty familiar, with a toolbar on the left side (including a file viewer) and the main code view on the right. There's also a small console on the bottom for when we get to testing.
 
-You will see that some new files have been created as well as a folder called `node_modules`. `node_modules` contains the Express installation as well as other dependencies that Express relies on. If you decide to share your code with others through GitHub, for example, you typically don't want to send the `node_modules` folder since this can become very large. All the important information is already stored inside `package.json` and `package-lock.json`, so to address this issue, create a file called `.gitignore`. Inside `.gitignore` enter `node_modules` on one line. What this does is tell Git to ignore `node_modules` when you commit your changes. (If you're not familiar with how Git and GitHub works, check out the recording of our GitHub session)
+[Remix](https://remix.ethereum.org/) starts with a few files already in your project. Since we'll be starting from scratch, go ahead and right click/delete all 4 files in the file viewer.
 
-To test that everything works as expected, type `console.log("Hello World!");` inside your `index.js` file and run your project:
-```
-$ node index.js
-```
-You should see `Hello World!` printed to your terminal. At this point, your directory should look like this:
-```
-. (/node-lab)
-├── node_modules
-├── .gitignore
-├── dining.json
-├── package-lock.json
-├── package.json
-```
+Once you've set up Remix, it would also be good (although optional) to get set up with Metamask, a crypto wallet that acts as a Chrome extension to let you interact with dapps + Ethereum testnets. Go ahead and install [Metamask](https://metamask.io/) and make a new account. We'll get into more Metamask stuff in section 5, but let's get right into coding.
 
 ## Starting Your Counter Smart Contract
-We will start by building an Express app inside `index.js` that responds to a basic GET request:
-```javascript
-const express = require("express");
+We'll start with a simple smart contract that counts using a stored number. This counter should have a `add` function to count up one, a `reset` function to reset the count, and a `getCounter` getter to get the count.
 
-const app = express();
-const PORT = 5000;
+To do this, we'll make a *smart contract* called `Counter`. Go ahead and make a new file called `Counter.sol` by clicking the plus button next to browser and stick this inside:
+```
+pragma solidity ^0.6.6;
 
-app.get("/", (req, res) => {
-  res.send("Welcome to the Dining API!");
-});
+contract Counter {
+    /* Define counter of type integer */
+    int counter;
 
-app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}`);
-})
+    /* This runs when the contract is executed */
+    constructor() public {
+       counter = 0;
+    }
+
+    /* Resets counter to zero */
+    function reset() public {
+        counter = 0;
+    }
+    
+    /* Simple function to add 1 to the counter */
+    function add() public {
+        counter += 1;
+    }
+    
+    /* Returns the counter. Does not cost gas. */
+    function getCounter() public view returns (int) {
+        return counter;
+    }
 ```
 We'll break down this chunk of code section by section.
-```const express = require("express");```
-> This line imports the Express library into our project, allowing us to use Express functionalities on our server.
+```pragma solidity ^0.6.6;```
+> Programming langauges are constantly changing, sometimes with breaking changes. This line tells the Solidity compiler which version of Solidity the code is expected to be built against. This line means that the Solidity compiler version must be no lesser than 0.6.6 and must be less than 0.7.0.
 
-`const app = express();`
-> We initialize our express server instance in this function call. This is essentially our "server object" and we will be manipulating this as we configure our server.
+`contract Counter {`
+> Contracts in Solidity are structures that store data and allow functions to be defined. You can think of them as kind of like classes in a more normal programming language. Here, we're making a new contract called `Counter`
 
-`const PORT = 5000;`
-> This is the [port](ports) that we want our app to run on. If you're not familiar with the concept of ports, feel free to just copy this but if you encounter issues running your app, try changing this port to another number.
+`int counter;`
+> This is where we store the decentralized, uncensorable `counter` integer. Here, `counter` will be an integer stored by the contract
 
- ```javascript
-app.get("/", (req, res) => {
-  res.send("Welcome to the Dining API!");
-});
+ ```
+constructor() public {
+    counter = 0;
+}
 ```
-> This block tells our server object that we want to listen for HTTP `GET` requests as indicated by the `app.get()` function call. 
-> 
-> The first parameter of the function call is `"/"` which indicates that this block will be handling function calls to the base route. We will learn more about routes later in this lab, but a quick summary is that if you had a website called `something.com`, this would correspond to all requests sent to `something.com` or `something.com/`.
->
->The second parameter of the function call is an [anonymous function][anon-func] that takes two parameters: `req` and `res` and then runs:
+> When a contract is created, the `constructor` is called exactly once, and never called again. This `constructor` will set the `counter` variable to 0, starting our counter.
 
-```javascript
-res.send("Welcome to the Dining API!");
 ```
-
->`req` is short for *request* and contains information sent to our server from the client. We will see later how we can use this to send back different types of data, depending on what the client wants
->
->`res` is short for *response*. This is how we will be interacting with the client to send back different kinds of data or errors depending on the request they sent.
-> 
-> In this example, we don't care about their request and always send back the text: "Welcome to the Dining API"
-
-```javascript
-app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}`);
-})
+function reset() public {
+    counter = 0;
+}
 ```
-> Here, we are calling the `app.listen` function to make our Express server start listening on the `PORT` that we specified earlier. Optionally, what is known as a *callback function* is passed into the function call as the second parameter. This is a function that is run after the Express server finishes starting up. In our case, we print a message that lets us know that everything's ready to go.
+> The `reset` function is a *public* function, which means it can be called from any other contract/from anywhere else. In other labs, we'll see other modifiers like *external* or *private*. This function can be called to reset the counter to 0.
+
+```
+function add() public {
+    counter += 1;
+}
+```
+> Here, we're doing the heavy lifting of incrementing our `counter` by 1 each time this function is called.
+
+```
+function getCounter() public view returns (int) {
+    return counter;
+}
+```
+> This function is our getter, allowing us to get the value of our `counter`. One interesting thing to note is the `view` modifier of this function. This means that this function is not going to modify any data in our contract, and so does not require any other computer on the Ethereum network to do anything, as we can just pull the data from the blockchain ourselves.
+> This means **this function won't cost any gas to execute**, as it takes no computational power. All of our other functions, as they change the state of the contract, will cost **gas** to execute, which is basically a fee paid in Ethereum for using EVM resources.
 
 ## Compiling and Testing with Remix
-Now that we have a basic server set up, we want to send actual data back to the user. This is where our *surprise tool*, `dining.json`, will come in handy.
+1. Go to the *compile* tab on Remix (the second one). Make sure `0.6.6+commit.6c089d02` is selected as the compiler, and go ahead and hit the big blue `Compile Counter.sol` button. This should be pretty fast, and you should see a green checkmark next to the compile tab once it's done.
+2. Go to the *deploy and run* tab (right under the compile tab). Make sure your environment is set to `JavaScript VM` and hit the orange `Deploy` button. You should see an extra line in the `Deployed Contracts` section.
+3. Expand the `COUNTER AT 0x...` line in the `Deployed Contracts` section. You should see two orange buttons (needs gas) for adding and resetting, as well as a blue button for `getCounter`. Each of these buttons will call the corresponding function in your contract. Try clicking these buttons a few times and see how the counter changes once you `getCounter`.
 
-At the top of `index.js`, add this line:
-```javascript
-const dining = require("./dining.json");
-```
+### A *small* problem
+Ideally, even though our integer is decentralized, we'd like to make sure only the **owner** of this contract can reset the integer, to prevent someone from mucking around with the sanctity of our unstoppable counter! However, this protection doesn't exist in our current contract!
 
-The data you downloaded is stored in a format called [JSON][json]. This format allows us to store structured data in plain text. Luckily for us, we don't have to worry about parsing this data as Node.JS does this automatically for us. The line of code above does just that. It imports the data from `dining.json` and stores it in the `dining` variable.
-
-After this, we want to create an endpoint, or route, where people can send requests to retrieve this data. Let's make this data accessible at `/locations`.
-
-To do that, create another block of code after your root route that listens for requests to `/locations` and sends the `dining` data as JSON:
-```javascript
-app.get("/locations", (req, res) => {
-  res.json(dining);
-});
-```
-From the last section, we learned that `res` allows us to send a response back to the client. Here, instead of just sending a plain message back to the client, we send the dining object back to the user, but make sure to send it back in the JSON format, as specified with the `res.json` function call.
-
-Test this endpoint by running:
-```
-$ node index.js
-```
-then check your browser and go to [http://localhost:5000/locations]. You should see a huge chunk of JSON data identical to what is found in your `dining.json` file.
+Try choosing another `ACCOUNT` from the dropdown. Notice that resetting the counter still works, even though this wasn't the original account that we deployed from! What to do?
 
 ## Adding Ownership
-Now what if you only want to get specific data and the huge dataset all at once? What if you only want to know the information about La Prima? In this section, we will be building an endpoint that responds to specific query parameters.
+Luckily, lots of people want to do this too, so this is super easy. *OpenZeppelin*, a company that builds developer tools for distributed systems, has a very commonly used smart contract that supports ownership. You can have a look at it here: [Ownable.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol).
 
-Once again, create another block of code:
-```javascript
-app.get("/location", (req, res) => {
-  const queryName = req.query.name;
-  const filteredLocations = []
-  for (location of dining.locations) {
-    if (location.name.includes(queryName)) {
-      filteredLocations.push(location);
-    }
-  }
-  res.json(filteredLocations);
-});
-```
-In our handler function, you can see that we define a variable `queryName`. This corresponds to the name of the location that we are searching. As you learned in the talk, you can send parameters with GET requests in the form of `/location?name=<name>`. When that gets passed to our function here, the name that is passed as an argument is then accessible through the `req.query` object.
+We'll be importing this into our contract, and then using *contract inheritance* to make our contract ownable!
 
-Now algorithmically speaking, our function here works by creating a shortlist of locations in our dining dataset containing the queried keyword.
+First, add this line right above your `contract Counter {` line:
+`import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";`
 
-Try this out yourself by running your program and sending a request to `/location?name=prima`. 
+> This line uses some Remix sugar to pull the file from GitHub and imports it into your contract like `#include` in C or `import` in Python.
 
-Don't see anything? This is because if you look at the dataset, there's only an entry for La **P**rima, but you're searching for **p**rima. I'll leave this as an exercise for you to figure out how to solve :)
+Now, we can make two quick changes to our code to use this. First, we want to make `Counter`, our smart contract, inherit from `Ownable`. To do this, modify the `contract Counter {` line to say this:
+`contract Counter is Ownable {`
 
-As another exercise, design a route that returns what restaurants are open at a specific time of the day. Tinker with the data that is accessible to you through `dining.json`. Here's a boilerplate to get you started:
-```javascript
-app.get("/location/time", (req, res) => {
-  // Your code here
-});
-```
+> Basically, this line gives us access to all of the functions and *modifiers* defined in `Ownable`, making us able to define functions where we want only the owner to be allowed!
+
+Finally, we want to make our `reset` function only callable by the owner. We can do this with a simple one line change, making use of the `onlyOwner` *modifier*. Change the reset line to this:
+`function reset() public onlyOwner {`
+
+> Adding `onlyOwner` as a modifier for our `reset` function means that `onlyOwner` from the `Ownable` contract will be called before `reset`. `onlyOwner` is a function that checks if the owner is calling, preventing `reset` from running if not! (more tutorials on modifiers coming soon!)
+
+Now, try recompiling and redeploying, and enjoy your new, more secure Counter contract.
 
 ## Deploying to Testnet
-You might be wondering, how would you go about passing parameters with spaces like searching for "La Prima"? If you tried this on your browser, you'd probably end up searching it up on Google. This is where Postman comes in handy. Make sure that your server is running, then launch Postman. You'll see an orange layout and a field where you can enter a request URL. Don't worry about putting the query parameter with the question mark yet.
-
-![Postman name](./assets/postman-query-param.png)
-
-Instead, you'll notice a section below that says *Query Params*. There, you can enter your key, `name`, and your value like `La Prima`, for example. Here, you can actually enter a value with spaces and the possibilities are ✨ limitless ✨
-
-Well, that's it for this lab! Stay tuned for the next talk on React where you will learn how to build a frontend to display this content in a more readable manner to your users.
+More information coming soon!
 
 ## Next Steps
-| Resource | Description |
-|---|---|
-| [MongoDB][net-ninja-mongo] | Learn to work with more than just static data using the powerful NoSQL database: MongoDB |
-| [Mongoose][mongoose] | Simplifying the MongoDB interfafce |
-| [Authentication with JWT][net-ninja-jwt] | Secure your web apps with authentication using JSON Web Tokens (JWT) |
-
-[dining-api]: https://apis.scottylabs.org/docs
-[data-file]: dining.json
-[ports]: https://www.dummies.com/programming/networking/cisco/network-basics-networking-port-overview/
-[anon-func]: https://www.w3schools.com/js/js_function_definition.asp
-[json]: https://developers.squarespace.com/what-is-json
-[net-ninja-mongo]: https://www.youtube.com/playlist?list=PL4cUxeGkcC9jBcybHMTIia56aV21o2cZ8
-[net-ninja-jwt]: https://www.youtube.com/playlist?list=PL4cUxeGkcC9iqqESP8335DA5cRFp8loyp
-[mongoose]: https://mongoosejs.com/
-
-
-
-
-
-
+Now that we have our amazing counter, a good next step is to learn more about voting contracts or ERC20, Ethereum's most popular token standard.

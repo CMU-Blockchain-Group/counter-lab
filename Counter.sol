@@ -11,7 +11,7 @@ contract Counter is Ownable {
     }
 
     /* Resets counter to zero. Only callable by the creator of the contract */
-    function reset() public onlyOwner{
+    function reset() public onlyOwner {
         counter = 0;
     }
     
